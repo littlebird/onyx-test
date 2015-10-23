@@ -142,7 +142,7 @@
    :onyx.messaging/peer-port-range [40600 40800]
    :onyx.messaging/bind-addr "localhost"})
 
-(def n-peers 15)
+(def n-peers 20)
 
 (defn start-onyx
   []
@@ -174,12 +174,13 @@
         (println "INPUT INNER SEGMENT" inner-segment)
         (>/>! (:input inner) inner-segment))
       (>/>! (:input inner) :done))
-    (let [results (take-segments! (:output inner))]
+    (let [results (take-segments! (:output inner))
+          complete (-> segment
+                       (update :outer (partial str "prefix-"))
+                       (assoc :inner results))]
       (println "INNER SEGMENTS COMPLETE!")
-      (clojure.pprint/pprint results)
-      (-> segment
-          (update :outer (partial str "prefix-"))
-          (assoc :inner results)))))
+      (clojure.pprint/pprint complete)
+      complete)))
 
 (defn a
   [segment]
@@ -190,7 +191,7 @@
 (defn b
   [segment]
   (println "BBBBBBBBBBBBB")
-  (Thread/sleep (rand-int 1000))
+  (Thread/sleep (rand-int 5000))
   (update segment :inner (partial str "b-")))
 
 (defn c
