@@ -92,7 +92,7 @@
     :onyx/batch-size batch-size
     :onyx/plugin :onyx.plugin.core-async/input
     :onyx/medium :core.async
-    :onyx/max-peers 4
+    :onyx/max-peers 1
     :onyx/pending-timeout 60000}
    {:onyx/name :a
     :onyx/type :function
@@ -138,11 +138,11 @@
    :onyx/id onyx-id
    :onyx.peer/job-scheduler :onyx.job-scheduler/balanced
    :onyx.messaging/impl :aeron
-   :onyx.messaging.aeron/embedded-driver? false
+   :onyx.messaging.aeron/embedded-driver? true
    :onyx.messaging/peer-port-range [40600 40800]
    :onyx.messaging/bind-addr "localhost"})
 
-(def n-peers 11)
+(def n-peers 15)
 
 (defn start-onyx
   []
@@ -154,7 +154,8 @@
       (doseq [v-peer v-peers]
         (onyx.api/shutdown-peer v-peer))
       (onyx.api/shutdown-peer-group peer-group)
-      (onyx.api/shutdown-env env))))
+      (onyx.api/shutdown-env env)
+      (shutdown-agents))))
 
 (def inner-segments
   [{:inner "what"}
@@ -175,6 +176,7 @@
       (>/>! (:input inner) :done))
     (let [results (take-segments! (:output inner))]
       (println "INNER SEGMENTS COMPLETE!")
+      (clojure.pprint/pprint results)
       (-> segment
           (update :outer (partial str "prefix-"))
           (assoc :inner results)))))
